@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 
 type Hospital = { id: string; name: string; city: string; status: "Ativo" | "Rascunho" };
 type Equipment = {
@@ -45,7 +45,7 @@ export default function App() {
   const currentProtocols = protocols.filter(p => p.hospitalId === hospitalId);
   const saveHospitals = (next: Hospital[]) => { setHospitals(next); localStorage.setItem("gr-hospitals", JSON.stringify(next)); };
   const saveEquipment = (next: Equipment[]) => { setEquipment(next); localStorage.setItem("gr-equipment", JSON.stringify(next)); };
-  const addHospital = (event: React.FormEvent) => {
+  const addHospital = (event: FormEvent) => {
     event.preventDefault(); if (!hospitalName.trim()) return;
     const h = { id: uid(), name: hospitalName.trim(), city: hospitalCity.trim() || "Localização não informada", status: "Rascunho" as const };
     saveHospitals([...hospitals, h]); setHospitalId(h.id); setHospitalName(""); setHospitalCity(""); setShowHospitalForm(false); setPage("Equipamentos");
