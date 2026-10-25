@@ -16,6 +16,18 @@ Aplicativo responsivo para organizar instituições, equipamentos de radiologia 
 - Estrutura de PWA: manifesto, ícone, service worker e cache básico do aplicativo para facilitar instalação e abertura offline após a primeira visita.
 - Dados de demonstração iniciais do Hospital e Maternidade Madre Vannini, incluindo detector AGFA AXYS (série 4493) e digitalizador AGFA CR 35-X.
 
+## Publicar o PWA no GitHub Pages
+
+O repositório inclui um fluxo GitHub Actions em `.github/workflows/deploy-pages.yml`. Para autorizar a publicação:
+
+1. Abra **Settings → Pages** no repositório.
+2. Em **Build and deployment → Source**, selecione **GitHub Actions**.
+3. Confirme que GitHub Actions está autorizado para o repositório.
+4. Abra a aba **Actions** e acompanhe o fluxo **Build and deploy PWA to GitHub Pages** após um novo commit ou execute-o manualmente.
+5. Quando o fluxo terminar com sucesso, abra a URL de Pages exibida pelo fluxo.
+
+O endereço esperado para o site de projeto é `https://arquivosmcg-ops.github.io/guia-radiologia-madre-vannini/`, se o GitHub Pages estiver habilitado para este repositório/organização. Não considero a publicação concluída até o fluxo terminar e o site ser verificado.
+
 ## Instalar em celular ou computador
 
 Depois de publicar o aplicativo em um endereço HTTPS, abra o endereço no navegador compatível:
@@ -24,7 +36,7 @@ Depois de publicar o aplicativo em um endereço HTTPS, abra o endereço no naveg
 - **iPhone / iPad:** abra no Safari, toque em **Compartilhar** e escolha **Adicionar à Tela de Início**.
 - **Computador / Chrome ou Edge:** use o ícone de instalação na barra de endereços, quando exibido, ou o menu do navegador para instalar.
 
-A opção de instalação depende do navegador e da publicação em HTTPS. O cache offline disponibiliza a estrutura da aplicação, mas os registros permanecem no armazenamento local do navegador; ainda não são sincronizados entre dispositivos.
+A opção de instalação depende do navegador e da publicação em HTTPS. O service worker armazena em cache a estrutura e os recursos do aplicativo visitados, permitindo reabrir a interface após a primeira carga. Os registros permanecem no armazenamento local do navegador; ainda não são sincronizados entre dispositivos.
 
 ## Executar localmente
 
