@@ -50,7 +50,7 @@ export default function App() {
     const h = { id: uid(), name: hospitalName.trim(), city: hospitalCity.trim() || "Localização não informada", status: "Rascunho" as const };
     saveHospitals([...hospitals, h]); setHospitalId(h.id); setHospitalName(""); setHospitalCity(""); setShowHospitalForm(false); setPage("Equipamentos");
   };
-  const addEquipment = (event: React.FormEvent) => {
+  const addEquipment = (event: FormEvent) => {
     event.preventDefault(); if (!equipmentName.trim()) return;
     saveEquipment([...equipment, { id: uid(), hospitalId, name: equipmentName.trim(), type: equipmentType, brand: brand.trim(), model: model.trim(), serial: serial.trim(), technology, notes: notes.trim() }]);
     setEquipmentName(""); setBrand(""); setModel(""); setSerial(""); setNotes(""); setTechnology("Não definida"); setShowEquipmentForm(false);
