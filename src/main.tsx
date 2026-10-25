@@ -10,7 +10,7 @@ createRoot(document.getElementById("root")!).render(
 // Register the service worker so the app can be installed and its shell cached.
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch((error) => {
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`, { scope: import.meta.env.BASE_URL }).catch((error) => {
       console.error("Não foi possível registrar o modo instalável:", error);
     });
   });
