@@ -1,16 +1,16 @@
 {
-  "id": "/",
+  "id": "/guia-radiologia-madre-vannini/",
   "name": "Guia de Radiologia",
   "short_name": "Guia Radiologia",
   "description": "Guia de radiologia para gestão de hospitais, equipamentos e protocolos técnicos.",
   "lang": "pt-BR",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "/guia-radiologia-madre-vannini/",
+  "scope": "/guia-radiologia-madre-vannini/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#f5f7f7",
   "theme_color": "#123c46",
   "icons": [
-    { "src": "/icons/radiologia.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/guia-radiologia-madre-vannini/icons/radiologia.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }
