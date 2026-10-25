@@ -13,7 +13,18 @@ Aplicativo responsivo para organizar instituições, equipamentos de radiologia 
 - Identificação de registros incompletos para conferência posterior.
 - Separação dos protocolos em elaboração, em revisão e aprovados.
 - Interface responsiva para computador, tablet e celular.
+- Estrutura de PWA: manifesto, ícone, service worker e cache básico do aplicativo para facilitar instalação e abertura offline após a primeira visita.
 - Dados de demonstração iniciais do Hospital e Maternidade Madre Vannini, incluindo detector AGFA AXYS (série 4493) e digitalizador AGFA CR 35-X.
+
+## Instalar em celular ou computador
+
+Depois de publicar o aplicativo em um endereço HTTPS, abra o endereço no navegador compatível:
+
+- **Android / Chrome:** abra o site e use a opção **Instalar app** ou **Adicionar à tela inicial**.
+- **iPhone / iPad:** abra no Safari, toque em **Compartilhar** e escolha **Adicionar à Tela de Início**.
+- **Computador / Chrome ou Edge:** use o ícone de instalação na barra de endereços, quando exibido, ou o menu do navegador para instalar.
+
+A opção de instalação depende do navegador e da publicação em HTTPS. O cache offline disponibiliza a estrutura da aplicação, mas os registros permanecem no armazenamento local do navegador; ainda não são sincronizados entre dispositivos.
 
 ## Executar localmente
 
