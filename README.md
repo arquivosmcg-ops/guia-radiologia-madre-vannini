@@ -1,78 +1,57 @@
-# Guia de Radiologia — aplicação multi-hospitalar
+# Guia de Radiologia — Hospital e Maternidade Madre Vannini
 
-Aplicativo responsivo para organizar instituições, equipamentos de radiologia e o fluxo documental de protocolos técnicos. O sistema foi pensado para ser utilizado por diferentes hospitais: cada instituição mantém seu próprio inventário e seus próprios protocolos.
+Aplicativo responsivo de consulta rápida para apoiar a equipe durante exames radiográficos. A navegação é organizada por região anatômica/exame, com orientações de posicionamento, centralização e parâmetros técnicos submetidos à validação institucional.
 
-> **Importante:** esta é a primeira versão funcional de interface/protótipo. Os registros são guardados no armazenamento local do navegador usado naquele dispositivo. Ainda não há autenticação real, sincronização entre usuários/dispositivos, banco de dados central ou autorização clínica operacional. Não utilizar como sistema clínico de produção até concluir backend, segurança, testes e validação institucional.
+> **Estado atual:** protótipo demonstrativo. O primeiro conteúdo é Radiografia de tórax — rotina PA e Perfil. Os exemplos de kV, mAs e DFF exibidos na interface são valores fornecidos para estruturar o guia e estão explicitamente marcados como não validados. Não devem ser tratados como prescrição clínica nem usados até revisão e aprovação formal dos responsáveis técnicos.
 
-## Funcionalidades presentes nesta versão
+## Funcionalidades presentes
 
-- Painel inicial com resumo da instituição selecionada.
-- Cadastro de múltiplos hospitais.
-- Inventário de aparelhos de raios X, detectores DR e digitalizadores CR.
-- Cadastro progressivo: fabricante, modelo, número de série e tecnologia podem ficar em branco.
-- Identificação de registros incompletos para conferência posterior.
-- Separação dos protocolos em elaboração, em revisão e aprovados.
+- Biblioteca de exames por região anatômica, com busca rápida.
+- Primeiro conteúdo demonstrativo: tórax PA e Perfil, com alternância entre incidências.
+- Esquema visual ilustrativo e instruções de posicionamento.
+- Área de parâmetros técnicos com alerta de validação local.
+- Exames ainda não elaborados aparecem como “Em preparação”, sem valores técnicos inventados.
+- Configuração técnica local secundária à consulta por exame.
 - Interface responsiva para computador, tablet e celular.
-- Estrutura de PWA: manifesto, ícone, service worker e cache básico do aplicativo para facilitar instalação e abertura offline após a primeira visita.
-- Dados de demonstração iniciais do Hospital e Maternidade Madre Vannini, incluindo detector AGFA AXYS (série 4493) e digitalizador AGFA CR 35-X.
+- Estrutura de PWA: manifesto, ícone e service worker para facilitar instalação e reabertura offline após a primeira visita.
 
-## Publicar o PWA no GitHub Pages
+## Segurança clínica e limites
 
-O repositório inclui um fluxo GitHub Actions em `.github/workflows/deploy-pages.yml`. Para autorizar a publicação:
+- O conteúdo exibido não substitui treinamento, julgamento profissional, instruções do fabricante nem protocolos institucionais aprovados.
+- Parâmetros de exposição dependem do equipamento, detector, grade, biotipo, indicação e protocolo local.
+- O posicionamento, a técnica, os critérios de qualidade e a aplicabilidade precisam ser revisados e aprovados pelos responsáveis designados antes do uso clínico.
+- O protótipo ainda não implementa autenticação real, gestão de permissões, auditoria, banco central ou sincronização entre dispositivos.
+- Não inserir dados identificáveis de pacientes.
+
+Consulte docs/VALIDACAO-CLINICA.md, docs/SEGURANCA.md e docs/PLANO-DE-DESENVOLVIMENTO.md antes de ampliar o conteúdo ou considerar uso operacional.
+
+## Publicar no GitHub Pages
+
+O repositório inclui o fluxo GitHub Actions em .github/workflows/deploy-pages.yml.
 
 1. Abra **Settings → Pages** no repositório.
 2. Em **Build and deployment → Source**, selecione **GitHub Actions**.
-3. Confirme que GitHub Actions está autorizado para o repositório.
-4. Abra a aba **Actions** e acompanhe o fluxo **Build and deploy PWA to GitHub Pages** após um novo commit ou execute-o manualmente.
-5. Quando o fluxo terminar com sucesso, abra a URL de Pages exibida pelo fluxo.
+3. Acesse a aba **Actions** e acompanhe **Build and deploy PWA to GitHub Pages**.
+4. Só considere a publicação concluída depois de o fluxo terminar com sucesso e o site ser aberto e verificado.
 
-O endereço esperado para o site de projeto é `https://arquivosmcg-ops.github.io/guia-radiologia-madre-vannini/`, se o GitHub Pages estiver habilitado para este repositório/organização. Não considero a publicação concluída até o fluxo terminar e o site ser verificado.
+Endereço esperado: https://arquivosmcg-ops.github.io/guia-radiologia-madre-vannini/ — desde que GitHub Pages esteja habilitado e o fluxo conclua sem erros.
 
 ## Instalar em celular ou computador
 
-Depois de publicar o aplicativo em um endereço HTTPS, abra o endereço no navegador compatível:
-
-- **Android / Chrome:** abra o site e use a opção **Instalar app** ou **Adicionar à tela inicial**.
-- **iPhone / iPad:** abra no Safari, toque em **Compartilhar** e escolha **Adicionar à Tela de Início**.
-- **Computador / Chrome ou Edge:** use o ícone de instalação na barra de endereços, quando exibido, ou o menu do navegador para instalar.
-
-A opção de instalação depende do navegador e da publicação em HTTPS. O service worker armazena em cache a estrutura e os recursos do aplicativo visitados, permitindo reabrir a interface após a primeira carga. Os registros permanecem no armazenamento local do navegador; ainda não são sincronizados entre dispositivos.
+Após a publicação em HTTPS, abra o site em navegador compatível e use **Instalar app** ou **Adicionar à tela inicial**. A disponibilidade depende do navegador. O modo offline depende de o aplicativo e os recursos terem sido carregados anteriormente.
 
 ## Executar localmente
 
 Requisitos: Node.js LTS e npm.
 
-```bash
+~~~bash
 npm install
 npm run dev
-```
+~~~
 
-Para verificar a compilação de produção:
+Verificar compilação de produção:
 
-```bash
+~~~bash
 npm run build
 npm run preview
-```
-
-## Próximas etapas antes de uso real
-
-1. Definir autenticação, perfis e isolamento de dados por instituição.
-2. Implementar backend central (por exemplo, Supabase/PostgreSQL) após aprovação institucional.
-3. Aplicar permissões e regras de segurança no servidor/banco de dados.
-4. Criar edição, auditoria, exportação e gestão de versões de equipamentos e protocolos.
-5. Formalizar o fluxo de revisão/aprovação com responsáveis técnicos de cada hospital.
-6. Criar testes automatizados, política de backup, recuperação e avaliação de segurança.
-7. Validar a aplicação em ambiente controlado antes de qualquer uso clínico.
-
-## Segurança clínica
-
-Esta versão não define nem recomenda parâmetros de exposição radiográfica. Protocolos clínicos devem ser criados e aprovados formalmente pelos responsáveis de cada instituição, conforme equipamentos, práticas locais, orientações dos fabricantes e requisitos aplicáveis. Um protocolo aprovado em um hospital não deve ser automaticamente considerado válido em outro.
-
-Não cadastrar dados identificáveis de pacientes nesta versão de demonstração.
-
-## Documentação
-
-- `docs/ARQUITETURA.md`
-- `docs/SEGURANCA.md`
-- `docs/VALIDACAO-CLINICA.md`
-- `docs/PLANO-DE-DESENVOLVIMENTO.md`
+~~~
