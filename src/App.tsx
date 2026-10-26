@@ -1,108 +1,112 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState } from "react";
 
-type Hospital = { id: string; name: string; city: string; status: "Ativo" | "Rascunho" };
-type Equipment = {
-  id: string; hospitalId: string; name: string; type: "Aparelho de raios X" | "Detector DR" | "Digitalizador CR" | "Outro";
-  brand: string; model: string; serial: string; technology: "DR" | "CR" | "Não definida"; notes: string;
-};
-type Protocol = { id: string; hospitalId: string; title: string; modality: string; status: "Em elaboração" | "Em revisão" | "Aprovado"; updated: string };
+type View = "Tórax" | "Em preparação" | "Sobre o guia";
+type Incidence = "PA" | "Perfil";
 
-const initialHospitals: Hospital[] = [{ id: "madre-vannini", name: "Hospital e Maternidade Madre Vannini", city: "Conchal — SP", status: "Ativo" }];
-const initialEquipment: Equipment[] = [
-  { id: "eq1", hospitalId: "madre-vannini", name: "Detector digital AGFA", type: "Detector DR", brand: "AGFA Healthcare", model: "AXYS", serial: "4493", technology: "DR", notes: "Cadastro inicial informado pela equipe." },
-  { id: "eq2", hospitalId: "madre-vannini", name: "Digitalizador AGFA CR 35-X", type: "Digitalizador CR", brand: "AGFA", model: "CR 35-X", serial: "", technology: "CR", notes: "" },
-  { id: "eq3", hospitalId: "madre-vannini", name: "Aparelho de raios X — identificação pendente", type: "Aparelho de raios X", brand: "", model: "", serial: "", technology: "Não definida", notes: "Identificação técnica a confirmar." }
+const exams = [
+  { name: "Tórax", title: "Radiografia de tórax", detail: "Rotina: PA e Perfil", status: "Conteúdo inicial" },
+  { name: "Abdome", title: "Radiografia de abdome", detail: "Incidências a definir", status: "Em preparação" },
+  { name: "Coluna", title: "Radiografia de coluna", detail: "Incidências a definir", status: "Em preparação" },
+  { name: "Crânio", title: "Radiografia de crânio", detail: "Incidências a definir", status: "Em preparação" },
+  { name: "Extremidades", title: "Radiografia de extremidades", detail: "Incidências a definir", status: "Em preparação" },
 ];
-const initialProtocols: Protocol[] = [
-  { id: "p1", hospitalId: "madre-vannini", title: "Radiografia de tórax", modality: "Radiografia convencional", status: "Em elaboração", updated: "Ainda não publicada" },
-  { id: "p2", hospitalId: "madre-vannini", title: "Critérios de qualidade da imagem", modality: "Controle de qualidade", status: "Em revisão", updated: "Ainda não publicada" }
-];
-const uid = () => Math.random().toString(36).slice(2, 10);
-const read = <T,>(key: string, fallback: T): T => {
-  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) as T : fallback; } catch { return fallback; }
-};
 
-export default function App() {
-  const [hospitals, setHospitals] = useState<Hospital[]>(() => read("gr-hospitals", initialHospitals));
-  const [equipment, setEquipment] = useState<Equipment[]>(() => read("gr-equipment", initialEquipment));
-  const [protocols] = useState<Protocol[]>(() => read("gr-protocols", initialProtocols));
-  const [hospitalId, setHospitalId] = useState("madre-vannini");
-  const [page, setPage] = useState("Visão geral");
-  const [search, setSearch] = useState("");
-  const [showHospitalForm, setShowHospitalForm] = useState(false);
-  const [showEquipmentForm, setShowEquipmentForm] = useState(false);
-  const [hospitalName, setHospitalName] = useState("");
-  const [hospitalCity, setHospitalCity] = useState("");
-  const [equipmentName, setEquipmentName] = useState("");
-  const [equipmentType, setEquipmentType] = useState<Equipment["type"]>("Aparelho de raios X");
-  const [brand, setBrand] = useState("");
-  const [model, setModel] = useState("");
-  const [serial, setSerial] = useState("");
-  const [technology, setTechnology] = useState<Equipment["technology"]>("Não definida");
-  const [notes, setNotes] = useState("");
-  const currentHospital = hospitals.find(h => h.id === hospitalId) ?? hospitals[0];
-  const currentEquipment = useMemo(() => equipment.filter(e => e.hospitalId === hospitalId && [e.name,e.brand,e.model,e.serial,e.type].join(" ").toLowerCase().includes(search.toLowerCase())), [equipment, hospitalId, search]);
-  const currentProtocols = protocols.filter(p => p.hospitalId === hospitalId);
-  const saveHospitals = (next: Hospital[]) => { setHospitals(next); localStorage.setItem("gr-hospitals", JSON.stringify(next)); };
-  const saveEquipment = (next: Equipment[]) => { setEquipment(next); localStorage.setItem("gr-equipment", JSON.stringify(next)); };
-  const addHospital = (event: FormEvent) => {
-    event.preventDefault(); if (!hospitalName.trim()) return;
-    const h = { id: uid(), name: hospitalName.trim(), city: hospitalCity.trim() || "Localização não informada", status: "Rascunho" as const };
-    saveHospitals([...hospitals, h]); setHospitalId(h.id); setHospitalName(""); setHospitalCity(""); setShowHospitalForm(false); setPage("Equipamentos");
-  };
-  const addEquipment = (event: FormEvent) => {
-    event.preventDefault(); if (!equipmentName.trim()) return;
-    saveEquipment([...equipment, { id: uid(), hospitalId, name: equipmentName.trim(), type: equipmentType, brand: brand.trim(), model: model.trim(), serial: serial.trim(), technology, notes: notes.trim() }]);
-    setEquipmentName(""); setBrand(""); setModel(""); setSerial(""); setNotes(""); setTechnology("Não definida"); setShowEquipmentForm(false);
-  };
-  const nav = [{ label: "Visão geral", icon: "◫" }, { label: "Hospitais", icon: "⌂" }, { label: "Equipamentos", icon: "▣" }, { label: "Protocolos", icon: "≡" }, { label: "Revisão técnica", icon: "✓" }];
-  const unknownCount = equipment.filter(e => e.hospitalId === hospitalId && (!e.brand || !e.model)).length;
-  const approvedCount = currentProtocols.filter(p => p.status === "Aprovado").length;
-
-  return <div className="app-shell">
-    <aside className="sidebar">
-      <div className="brand"><div className="brand-mark">✚</div><div><strong>Guia de Radiologia</strong><span>GESTÃO MULTI-HOSPITALAR</span></div></div>
-      <div className="side-label">ESPAÇO DE TRABALHO</div>
-      <label className="hospital-select-label" htmlFor="hospital-select">Instituição selecionada</label>
-      <select id="hospital-select" className="hospital-select" value={hospitalId} onChange={e => { setHospitalId(e.target.value); setSearch(""); }}>
-        {hospitals.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
-      </select>
-      <nav>{nav.map(n => <button key={n.label} className={page === n.label ? "nav-item active" : "nav-item"} onClick={() => setPage(n.label)}><span className="nav-icon">{n.icon}</span>{n.label}{n.label === "Equipamentos" && <span className="nav-count">{equipment.filter(e => e.hospitalId === hospitalId).length}</span>}</button>)}</nav>
-      <div className="sidebar-bottom"><div className="secure-icon">⌑</div><div><strong>Uso responsável</strong><p>Protocolos clínicos exigem aprovação técnica formal.</p></div></div>
-      <div className="user-profile"><div className="avatar">GR</div><div><strong>Equipe de radiologia</strong><span>Perfil de demonstração</span></div><span className="dots">•••</span></div>
-    </aside>
-
-    <main className="main-content">
-      <header className="topbar"><div className="breadcrumbs">Radiologia <span>/</span> {page}</div><div className="top-actions"><span className="status-dot"></span><span>Ambiente de demonstração</span><button className="help-button" title="Ajuda">?</button></div></header>
-      <div className="page-wrap">
-        <div className="page-heading"><div><div className="eyebrow">{currentHospital?.city ?? "Instituição"}</div><h1>{page}</h1><p className="subheading">{page === "Visão geral" ? "Acompanhe os equipamentos e a situação dos protocolos da instituição." : page === "Hospitais" ? "Cadastre e organize instituições sem exigir todos os dados no início." : page === "Equipamentos" ? "Cadastre aparelhos, detectores e digitalizadores mesmo com informações pendentes." : page === "Protocolos" ? "Organize documentos técnicos e acompanhe o estado de aprovação." : "Acompanhe itens que precisam de conferência antes da publicação."}</p></div><button className="primary-button" onClick={() => page === "Hospitais" ? setShowHospitalForm(true) : page === "Equipamentos" ? setShowEquipmentForm(true) : setPage("Equipamentos")}><span>＋</span>{page === "Hospitais" ? "Adicionar hospital" : page === "Equipamentos" ? "Novo equipamento" : "Cadastrar equipamento"}</button></div>
-
-        {page === "Visão geral" && <>
-          <section className="welcome-card"><div className="welcome-copy"><span className="welcome-tag">PAINEL INSTITUCIONAL</span><h2>Radiologia organizada.<br/><em>Informação confiável.</em></h2><p>Gerencie equipamentos e protocolos de cada hospital em um só lugar, respeitando a validação técnica local.</p><button className="light-button" onClick={() => setPage("Equipamentos")}>Ver equipamentos <span>→</span></button></div><div className="welcome-art"><div className="art-ring ring-one"></div><div className="art-ring ring-two"></div><div className="art-cross">✚</div><div className="art-caption">CUIDADO · QUALIDADE · SEGURANÇA</div></div></section>
-          <div className="section-title-row"><div><h2>Resumo da instituição</h2><p>Visão geral do espaço selecionado</p></div><span className="date-chip">Atualizado neste dispositivo</span></div>
-          <div className="stats-grid"><Stat label="Equipamentos cadastrados" value={String(equipment.filter(e => e.hospitalId === hospitalId).length)} detail="Inclui cadastros incompletos" icon="▣"/><Stat label="Dados a completar" value={String(unknownCount)} detail="Marca ou modelo não informado" icon="◷"/><Stat label="Protocolos aprovados" value={String(approvedCount)} detail="Liberados para consulta" icon="✓"/><Stat label="Em elaboração/revisão" value={String(currentProtocols.filter(p => p.status !== "Aprovado").length)} detail="Não liberados para uso clínico" icon="≡"/></div>
-          <div className="content-grid"><section className="panel equipment-panel"><div className="panel-heading"><div><h3>Equipamentos recentes</h3><p>Registros da instituição</p></div><button className="text-button" onClick={() => setPage("Equipamentos")}>Ver todos →</button></div><div className="mini-list">{equipment.filter(e => e.hospitalId === hospitalId).slice(0,4).map(e => <div className="mini-row" key={e.id}><div className="equipment-icon">{e.type === "Detector DR" ? "▦" : e.type === "Digitalizador CR" ? "▤" : "▣"}</div><div className="mini-main"><strong>{e.name}</strong><span>{e.brand || "Fabricante não informado"}{e.model ? " · " + e.model : " · Modelo não informado"}</span></div><span className={e.brand && e.model ? "pill pill-green" : "pill pill-amber"}>{e.brand && e.model ? "Identificado" : "Incompleto"}</span></div>)}</div></section>
-          <section className="panel protocol-panel"><div className="panel-heading"><div><h3>Fluxo de protocolos</h3><p>Situação documental</p></div><button className="text-button" onClick={() => setPage("Protocolos")}>Abrir →</button></div>{currentProtocols.length ? currentProtocols.map(p => <div className="protocol-row" key={p.id}><div className="protocol-symbol">≡</div><div className="protocol-main"><strong>{p.title}</strong><span>{p.modality}</span><span className={p.status === "Aprovado" ? "pill pill-green" : p.status === "Em revisão" ? "pill pill-blue" : "pill pill-amber"}>{p.status}</span></div></div>) : <Empty title="Nenhum protocolo cadastrado" text="Os protocolos poderão ser adicionados para esta instituição."/>}</section></div>
-        </>}
-
-        {page === "Hospitais" && <section className="panel full-panel"><div className="panel-heading"><div><h3>Instituições cadastradas</h3><p>Os dados e equipamentos são separados por hospital.</p></div><span className="count-chip">{hospitals.length} instituição(ões)</span></div><div className="table-wrap"><table><thead><tr><th>Instituição</th><th>Localização</th><th>Equipamentos</th><th>Situação</th><th></th></tr></thead><tbody>{hospitals.map(h => <tr key={h.id}><td><strong>{h.name}</strong><small>ID: {h.id}</small></td><td>{h.city || "Não informada"}</td><td>{equipment.filter(e => e.hospitalId === h.id).length}</td><td><span className={h.status === "Ativo" ? "pill pill-green" : "pill pill-amber"}>{h.status}</span></td><td><button className="small-outline" onClick={() => {setHospitalId(h.id); setPage("Equipamentos");}}>Abrir instituição →</button></td></tr>)}</tbody></table></div></section>}
-
-        {page === "Equipamentos" && <section className="panel full-panel"><div className="panel-heading"><div><h3>Inventário de equipamentos</h3><p>Os campos de identificação são opcionais; complete-os quando tiver os dados.</p></div><button className="secondary-button" onClick={() => setShowEquipmentForm(true)}>＋ Adicionar equipamento</button></div><div className="search-row"><div className="search-box"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nome, fabricante, modelo ou série..." /></div><span className="count-chip">{currentEquipment.length} registro(s)</span></div>{currentEquipment.length ? <div className="table-wrap"><table><thead><tr><th>Equipamento</th><th>Tipo / tecnologia</th><th>Fabricante / modelo</th><th>Número de série</th><th>Cadastro</th></tr></thead><tbody>{currentEquipment.map(e => <tr key={e.id}><td><strong>{e.name}</strong>{e.notes && <small>{e.notes}</small>}</td><td>{e.type}<small>{e.technology}</small></td><td>{e.brand || "Não informado"}<small>{e.model || "Modelo não informado"}</small></td><td>{e.serial || "Não informado"}</td><td><span className={e.brand && e.model ? "pill pill-green" : "pill pill-amber"}>{e.brand && e.model ? "Identificado" : "Pendente"}</span></td></tr>)}</tbody></table></div> : <Empty title="Nenhum equipamento encontrado" text="Adicione um equipamento ou ajuste os termos da busca."/>}<div className="info-note"><span>ⓘ</span><p><strong>Cadastro progressivo:</strong> não é necessário conhecer todos os dados para começar. Campos desconhecidos não impedem o registro e podem ser atualizados depois.</p></div></section>}
-
-        {page === "Protocolos" && <section className="panel full-panel"><div className="panel-heading"><div><h3>Protocolos da instituição</h3><p>Somente protocolos aprovados formalmente podem ser liberados para consulta clínica.</p></div><span className="count-chip">{currentProtocols.length} protocolo(s)</span></div>{currentProtocols.length ? <div className="table-wrap"><table><thead><tr><th>Protocolo</th><th>Categoria</th><th>Estado</th><th>Disponibilidade</th></tr></thead><tbody>{currentProtocols.map(p => <tr key={p.id}><td><strong>{p.title}</strong><small>{p.updated}</small></td><td>{p.modality}</td><td><span className={p.status === "Aprovado" ? "pill pill-green" : p.status === "Em revisão" ? "pill pill-blue" : "pill pill-amber"}>{p.status}</span></td><td>{p.status === "Aprovado" ? "Disponível para consulta" : "Não publicado"}</td></tr>)}</tbody></table></div> : <Empty title="Comece pelos documentos da instituição" text="A estrutura está pronta para receber protocolos e seu fluxo de aprovação."/>}<div className="info-note"><span>⚕</span><p><strong>Segurança clínica:</strong> esta versão não cria parâmetros de exposição. Conteúdo técnico precisa ser elaborado e aprovado pelos responsáveis de cada instituição.</p></div></section>}
-
-        {page === "Revisão técnica" && <section className="panel full-panel"><div className="panel-heading"><div><h3>Pendências de cadastro e validação</h3><p>Itens que merecem atenção da equipe responsável.</p></div></div><div className="review-card"><div className="review-mark amber">!</div><div><strong>{unknownCount} equipamento(s) com identificação incompleta</strong><p>É permitido manter campos pendentes durante o inventário. Complete-os quando as etiquetas ou documentos estiverem disponíveis.</p><button className="text-button" onClick={() => setPage("Equipamentos")}>Revisar equipamentos →</button></div></div><div className="review-card"><div className="review-mark blue">✓</div><div><strong>{currentProtocols.filter(p => p.status !== "Aprovado").length} protocolo(s) ainda não aprovado(s)</strong><p>Conteúdo em elaboração ou revisão não deve ser apresentado como protocolo clínico liberado.</p><button className="text-button" onClick={() => setPage("Protocolos")}>Ver protocolos →</button></div></div></section>}
-        <footer className="footer"><span>Guia de Radiologia <b>·</b> Versão inicial 0.1</span><span>Ferramenta de apoio documental — não substitui validação clínica institucional.</span></footer>
-      </div>
-    </main>
-
-    {showHospitalForm && <div className="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setShowHospitalForm(false); }}><form className="modal" onSubmit={addHospital}><div className="modal-heading"><div><span className="eyebrow">NOVA INSTITUIÇÃO</span><h2>Adicionar hospital</h2><p>Você pode completar os dados institucionais depois.</p></div><button type="button" className="close-button" onClick={() => setShowHospitalForm(false)}>×</button></div><label>Nome do hospital <span>*</span><input autoFocus required value={hospitalName} onChange={e => setHospitalName(e.target.value)} placeholder="Ex.: Hospital Municipal..." /></label><label>Cidade / estado<input value={hospitalCity} onChange={e => setHospitalCity(e.target.value)} placeholder="Ex.: Campinas — SP (opcional)" /></label><div className="modal-note">A instituição será criada como rascunho. Seus equipamentos ficarão separados dos demais hospitais.</div><div className="modal-actions"><button type="button" className="secondary-button" onClick={() => setShowHospitalForm(false)}>Cancelar</button><button className="primary-button" type="submit">Criar instituição</button></div></form></div>}
-
-    {showEquipmentForm && <div className="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) setShowEquipmentForm(false); }}><form className="modal modal-wide" onSubmit={addEquipment}><div className="modal-heading"><div><span className="eyebrow">INVENTÁRIO TÉCNICO</span><h2>Novo equipamento</h2><p>Instituição: {currentHospital?.name}. Preencha o que souber agora.</p></div><button type="button" className="close-button" onClick={() => setShowEquipmentForm(false)}>×</button></div><label>Nome para identificação <span>*</span><input autoFocus required value={equipmentName} onChange={e => setEquipmentName(e.target.value)} placeholder="Ex.: Aparelho sala 1, detector móvel..." /></label><div className="form-grid"><label>Tipo de equipamento<select value={equipmentType} onChange={e => setEquipmentType(e.target.value as Equipment["type"])}><option>Aparelho de raios X</option><option>Detector DR</option><option>Digitalizador CR</option><option>Outro</option></select></label><label>Tecnologia<select value={technology} onChange={e => setTechnology(e.target.value as Equipment["technology"])}><option>Não definida</option><option>DR</option><option>CR</option></select></label><label>Fabricante<input value={brand} onChange={e => setBrand(e.target.value)} placeholder="Opcional" /></label><label>Modelo<input value={model} onChange={e => setModel(e.target.value)} placeholder="Opcional" /></label><label>Número de série<input value={serial} onChange={e => setSerial(e.target.value)} placeholder="Opcional" /></label><label>Observações<input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Opcional" /></label></div><div className="modal-note"><strong>Não sabe algum dado?</strong> Deixe o campo vazio. O registro será salvo e marcado como pendente de identificação.</div><div className="modal-actions"><button type="button" className="secondary-button" onClick={() => setShowEquipmentForm(false)}>Cancelar</button><button className="primary-button" type="submit">Salvar equipamento</button></div></form></div>}
+function PositionDiagram({ incidence }: { incidence: Incidence }) {
+  return <div className={`diagram diagram-${incidence.toLowerCase()}`} role="img" aria-label={incidence === "PA" ? "Esquema ilustrativo do posicionamento frontal para tórax PA" : "Esquema ilustrativo do posicionamento lateral para tórax"}>
+    <div className="diagram-receptor"><span>RECEPTOR</span></div>
+    <div className="diagram-person">
+      <div className="head" />
+      <div className="torso"><span className="lung lung-left" /><span className="lung lung-right" /><span className="spine" /></div>
+      <div className="arm arm-left" /><div className="arm arm-right" />
+      <div className="leg leg-left" /><div className="leg leg-right" />
+    </div>
+    <div className="beam-line"><span>Raio central</span></div>
+    <div className="diagram-caption">{incidence === "PA" ? "Paciente de frente para o receptor" : "Lado esquerdo junto ao receptor"}</div>
   </div>;
 }
 
-function Stat({label, value, detail, icon}: {label:string; value:string; detail:string; icon:string}) {
-  return <div className="stat-card"><div className="stat-top"><span>{label}</span><div className="stat-icon">{icon}</div></div><div className="stat-value">{value}</div><div className="stat-detail">{detail}</div></div>;
+export default function App() {
+  const [selectedExam, setSelectedExam] = useState("Tórax");
+  const [incidence, setIncidence] = useState<Incidence>("PA");
+  const [search, setSearch] = useState("");
+  const [showTechnique, setShowTechnique] = useState(true);
+  const [showPosition, setShowPosition] = useState(true);
+  const [showEquipment, setShowEquipment] = useState(false);
+  const [equipment, setEquipment] = useState("Não configurado");
+  const filteredExams = useMemo(() => exams.filter(e => (e.title + " " + e.name + " " + e.detail).toLowerCase().includes(search.toLowerCase())), [search]);
+  const activeExam = exams.find(e => e.name === selectedExam) ?? exams[0];
+  const isChest = selectedExam === "Tórax";
+
+  return <div className="guide-app">
+    <header className="app-header">
+      <a className="brand" href="#" onClick={e => { e.preventDefault(); setSelectedExam("Tórax"); }} aria-label="Guia de Radiologia - início">
+        <span className="brand-symbol">✚</span><span><strong>Guia de Radiologia</strong><small>HOSPITAL E MATERNIDADE MADRE VANNINI</small></span>
+      </a>
+      <div className="header-right"><span className="offline-label"><i /> Guia de consulta</span><button className="outline-button" onClick={() => setShowEquipment(v => !v)}>{showEquipment ? "Fechar configuração" : "Configuração técnica"}</button></div>
+    </header>
+
+    <main className="layout">
+      <aside className="exam-sidebar">
+        <div className="sidebar-title"><span>CONSULTA RÁPIDA</span><h2>Exames</h2><p>Escolha a região anatômica.</p></div>
+        <label className="search-field"><span>⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar exame..." aria-label="Buscar exame" /></label>
+        <nav className="exam-list" aria-label="Exames por região">
+          {filteredExams.map(e => <button key={e.name} className={selectedExam === e.name ? "exam-item selected" : "exam-item"} onClick={() => { setSelectedExam(e.name); setIncidence("PA"); }}>
+            <span className="exam-icon">{e.name === "Tórax" ? "♧" : e.name === "Abdome" ? "◉" : e.name === "Coluna" ? "♙" : e.name === "Crânio" ? "◌" : "✣"}</span>
+            <span className="exam-item-copy"><strong>{e.name}</strong><small>{e.detail}</small></span><span className={e.name === "Tórax" ? "status-dot active-dot" : "status-dot"} />
+          </button>)}
+          {filteredExams.length === 0 && <p className="no-results">Nenhum exame encontrado.</p>}
+        </nav>
+        <div className="sidebar-note"><span>ⓘ</span><p><strong>Importante</strong><br />Consulte sempre o protocolo institucional aprovado e a orientação do responsável técnico.</p></div>
+        <button className="about-link" onClick={() => setSelectedExam("Sobre o guia")}>Sobre este guia <span>→</span></button>
+      </aside>
+
+      <section className="main-area">
+        {isChest ? <>
+          <div className="breadcrumbs">Biblioteca de exames <span>/</span> Tórax <span>/</span> Rotina</div>
+          <div className="hero-heading"><div><div className="eyebrow">RADIOGRAFIA CONVENCIONAL</div><h1>Radiografia de tórax</h1><p>Rotina: PA e Perfil</p></div><span className="draft-badge"><i /> Conteúdo demonstrativo</span></div>
+          <div className="notice"><span className="notice-icon">!</span><div><strong>Parâmetros técnicos aguardam validação local</strong><p>Os valores exibidos são exemplos de referência fornecidos para estruturar o guia. Não são uma prescrição universal nem um protocolo aprovado para uso clínico. A equipe responsável deve validar posicionamento, técnica e aplicabilidade ao equipamento antes da publicação.</p></div></div>
+
+          <div className="incidence-tabs" role="tablist" aria-label="Incidências de tórax">
+            <button role="tab" aria-selected={incidence === "PA"} className={incidence === "PA" ? "incidence-tab active" : "incidence-tab"} onClick={() => setIncidence("PA")}><span className="tab-number">01</span><span><strong>PA</strong><small>Posteroanterior</small></span></button>
+            <button role="tab" aria-selected={incidence === "Perfil"} className={incidence === "Perfil" ? "incidence-tab active" : "incidence-tab"} onClick={() => setIncidence("Perfil")}><span className="tab-number">02</span><span><strong>Perfil</strong><small>Lateral esquerda</small></span></button>
+          </div>
+
+          <div className="content-columns">
+            <div className="left-column">
+              <section className="guide-card">
+                <button className="card-heading" onClick={() => setShowPosition(v => !v)} aria-expanded={showPosition}><span className="heading-icon">♧</span><span><strong>Posicionamento do paciente</strong><small>Orientação visual e alinhamento</small></span><span className="chevron">{showPosition ? "−" : "+"}</span></button>
+                {showPosition && <div className="position-content"><PositionDiagram incidence={incidence} /><ol className="instruction-list">
+                  {incidence === "PA" ? <>
+                    <li><span>1</span><p><strong>Posição</strong>Paciente em pé, de frente para o receptor, com a região anterior do tórax apoiada no bucky vertical.</p></li>
+                    <li><span>2</span><p><strong>Cabeça e ombros</strong>Elevar o queixo e rodar os ombros para a frente, afastando as escápulas dos campos pulmonares.</p></li>
+                    <li><span>3</span><p><strong>Raio central</strong>Incidência perpendicular ao plano mediano, centrada aproximadamente no nível de T7, conforme protocolo validado.</p></li>
+                    <li><span>4</span><p><strong>Respiração</strong>Realizar a exposição em apneia após inspiração profunda, conforme instrução do profissional responsável.</p></li>
+                  </> : <>
+                    <li><span>1</span><p><strong>Posição</strong>Paciente em pé, em perfil verdadeiro, com o lado esquerdo junto ao receptor.</p></li>
+                    <li><span>2</span><p><strong> braços</strong>Elevar os braços para não sobrepor os campos pulmonares, mantendo o tronco sem rotação.</p></li>
+                    <li><span>3</span><p><strong>Raio central</strong>Centrar na linha axilar média, aproximadamente ao nível de T7, conforme protocolo validado.</p></li>
+                    <li><span>4</span><p><strong>Respiração</strong>Seguir a orientação de apneia e inspiração do protocolo institucional aprovado.</p></li>
+                  </>}
+                </ol></div>}
+              </section>
+              <section className="guide-card"><button className="card-heading" onClick={() => setShowTechnique(v => !v)} aria-expanded={showTechnique}><span className="heading-icon">⚙</span><span><strong>Técnica radiográfica</strong><small>Valores de referência não validados</small></span><span className="chevron">{showTechnique ? "−" : "+"}</span></button>
+                {showTechnique && <div className="technique-content"><div className="technique-grid">
+                  <div className="technique-value"><small>kV (exemplo)</small><strong>{incidence === "PA" ? "110–120" : "115–125"}</strong><span>Faixa informada no rascunho</span></div>
+                  <div className="technique-value"><small>mAs (exemplo)</small><strong>{incidence === "PA" ? "2–4" : "4–8"}</strong><span>Adulto médio; conferir localmente</span></div>
+                  <div className="technique-value"><small>DFF (referência)</small><strong>1,80 m</strong><span>Confirmar configuração e protocolo</span></div>
+                  <div className="technique-value"><small>Grade antidifusora</small><strong>Conforme protocolo</strong><span>Depende da técnica e do sistema</span></div>
+                </div><div className="technique-warning"><strong>Antes de usar:</strong> os valores devem ser confirmados pelo responsável técnico/radiologista e ajustados ao aparelho, detector, grade, biotipo e protocolo local. Não os use como configuração automática.</div><p className="technique-principle"><strong>Princípio geral informado:</strong> técnica de alto kV e baixo mAs, desde que validada para o sistema instalado e para a indicação clínica.</p></div>}
+              </section>
+            </div>
+            <aside className="right-column">
+              <section className="summary-card"><div className="summary-header"><span>✓</span><div><strong>Resumo da incidência</strong><small>{incidence === "PA" ? "PA · Posteroanterior" : "Perfil · Lateral esquerda"}</small></div></div><div className="summary-row"><span>Posição</span><strong>{incidence === "PA" ? "Em pé, anterior ao receptor" : "Em pé, lado esquerdo junto ao receptor"}</strong></div><div className="summary-row"><span>Centralização</span><strong>{incidence === "PA" ? "Plano mediano · T7" : "Linha axilar média · T7"}</strong></div><div className="summary-row"><span>Respiração</span><strong>Conforme protocolo aprovado</strong></div><div className="summary-footer"><span className="status-dot" /> Rascunho — não aprovado</div></section>
+              <section className="quick-card"><h3>Conferência rápida</h3><ul><li><span>✓</span>Confirmar identidade e pedido do exame.</li><li><span>✓</span>Retirar objetos que possam causar artefatos.</li><li><span>✓</span>Orientar o paciente antes da exposição.</li><li><span>✓</span>Verificar colimação e critérios locais de qualidade.</li></ul><p>Seguir as normas de radioproteção e o protocolo institucional.</p></section>
+              <section className="equipment-card"><div className="equipment-card-title"><span>▣</span><strong>Equipamento aplicado</strong></div><p>Use somente a técnica aprovada para o aparelho e detector instalados.</p><button onClick={() => setShowEquipment(v => !v)}>{showEquipment ? "Ocultar configuração" : "Configurar referência local"} →</button>{showEquipment && <label className="equipment-select">Referência do sistema<select value={equipment} onChange={e => setEquipment(e.target.value)}><option>Não configurado</option><option>Detector DR</option><option>Sistema CR</option><option>Outro / confirmar com responsável</option></select></label>}</section>
+            </aside>
+          </div>
+          <footer className="page-footer"><span>Guia de Radiologia · Hospital e Maternidade Madre Vannini</span><span>Rascunho para validação institucional</span></footer>
+        </> : selectedExam === "Sobre o guia" ? <div className="empty-page"><span className="large-icon">✚</span><div className="eyebrow">FINALIDADE</div><h1>Sobre este guia</h1><p>Ferramenta de consulta para apoiar a equipe durante exames radiográficos, com orientações de posicionamento e protocolos técnicos aprovados pela instituição.</p><div className="notice"><span className="notice-icon">!</span><div><strong>O conteúdo precisa de validação</strong><p>Este protótipo não substitui treinamento, julgamento profissional, instruções do fabricante nem protocolo institucional aprovado. Os parâmetros de exposição precisam ser revisados por profissionais autorizados antes do uso clínico.</p></div></div><button className="primary-button" onClick={() => setSelectedExam("Tórax")}>Voltar ao exame de tórax</button></div> : <div className="empty-page"><span className="large-icon">◌</span><div className="eyebrow">BIBLIOTECA EM CONSTRUÇÃO</div><h1>{activeExam.title}</h1><p>{activeExam.detail}. O conteúdo será incluído após revisão técnica e aprovação institucional.</p><div className="notice"><span className="notice-icon">i</span><div><strong>Protocolo ainda não disponível</strong><p>Para evitar informações incompletas ou parâmetros não validados, este exame ainda não apresenta instruções de posicionamento nem valores de exposição.</p></div></div><button className="primary-button" onClick={() => setSelectedExam("Tórax")}>Consultar tórax PA e Perfil</button></div>}
+      </section>
+    </main>
+  </div>;
 }
-function Empty({title,text}:{title:string;text:string}) { return <div className="empty-state"><div className="empty-icon">▤</div><strong>{title}</strong><p>{text}</p></div>; }
